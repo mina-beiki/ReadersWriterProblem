@@ -59,15 +59,27 @@ int main() {
     for(int i=0 ; i<2 ; i++){
         int pidTemp = getpid();
         if(pidTemp == mainPid){
-            
+            pid = fork();
+        }else{
+            break;
+        }
+    }
+    if(pid == 0){
+        readerFunc();
+        return 0;
+    }
+    if( getpid() == mainPid){
+        for(int i=0 ; i<3 ; i++){
+            wait(NULL); //wait on all readers and writers
         }
     }
 
-
-
-
-
-
+    //deAttach shared memory:
+    if(-1 == (shmctl(shmid, IPC_RMID, NULL)))
+    {
+        perror("shmctl error");
+        exit(-1);
+    }
     return 0;
 }
 
