@@ -14,9 +14,8 @@ int pid, mainPid;
 int shmid;
 
 typedef struct {
-    int ctr, read_ctr;
+    int ctr, readerCtr;
     pthread_mutex_t mutex;
-    pthread_mutex_t rw_mutex;
 } shNode; //nodes of shared memory which each is a struct
 
 void readerFunc();
@@ -40,7 +39,6 @@ int main() {
     pthread_mutexattr_init(&attr);
     pthread_mutexattr_setpshared(&attr, PTHREAD_PROCESS_SHARED);
     pthread_mutex_init(&(shMem->mutex), &attr);
-    pthread_mutex_init(&(shMem->rw_mutex), &attr);
 
     if (shmdt(shMem) == -1) {
         perror("shmdt error");
@@ -84,9 +82,60 @@ int main() {
 }
 
 void writerFunc(){
+    shNode* shMem;
+    if ((shMem = (shNode *)shmat(shmid, NULL, 0)) == (shNode *) -1) {
+        perror("shmat error");
+        exit(-1);
+    }
+    bool flag = true;
+    while(flag){
+        pthread_mutex_lock(&(shMem->mutex));
+        shMem->ctr ++;
+        printf("Writer has access.\n");
+        printf("PID = %d\n",getpid());
+        printf("Counter = %d\n",shMem->ctr);
+        //check if it has reached the limit:
+        if(shMem->ctr >= 5){
+            flag = false;
+        }
+        pthread_mutex_unlock(&(shMem->mutex));
+    }
+    if (shmdt(shMem) == -1) {
+        perror("shmdt error");
+        exit(-1);
+    }
+    sleep(1);
 
 }
 
 void readerFunc(){
+    shNode* shMem;
+    if ((shMem = (shNode *)shmat(shmid, NULL, 0)) == (shNode *) -1) {
+        perror("shmat error");
+        exit(-1);
+    }
+    bool flag = true;
+    while(flag){
+        shMem->readerCtr ++;
+        if(shMem->readerCtr == 1){ //first reader should lock the mutex
+            pthread_mutex_lock(&(shMem->mutex));
+        }
+        printf("Reader has access.\n");
+        printf("PID = %d\n",getpid());
+        printf("Counter = %d\n",shMem->ctr);
+        //check if it has reached the limit:
+        if(shMem->ctr >= 5){
+            flag = false;
+        }
 
+        shMem->readerCtr --;
+        if(shMem->readerCtr == 0) {
+            pthread_mutex_unlock(&(shMem->mutex));
+        }
+
+    }
+    if (shmdt(shMem) == -1) {
+        perror("shmdt error");
+        exit(-1);
+    }
 }

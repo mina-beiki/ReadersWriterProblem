@@ -1,0 +1,32 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/Users/a/CLionProjects/readersWriterProblem/main.c
+time.h
+-
+sys/types.h
+-
+sys/wait.h
+-
+sys/ipc.h
+-
+sys/shm.h
+-
+stdio.h
+-
+stdlib.h
+-
+stdbool.h
+-
+unistd.h
+-
+string.h
+-
+pthread.h
+-
+
